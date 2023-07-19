@@ -2,6 +2,8 @@ import uuid
 import os
 from dotenv import load_dotenv
 import time
+import csv
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
@@ -103,6 +105,39 @@ for step in target["steps"]:
       save_screenshot(driver, "output/" + str(target["uuid"]) + ".png")
 
 ## TODO Report
+# 將 target 字典的資料儲存為 CSV 檔案
+output_file = "output/test_report.csv"
+
+target["write_time"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+# 檢查 CSV 檔案是否存在
+file_exists = os.path.exists(output_file)
+
+# 檢查是否已經存在欄位名稱
+field_names = list(target.keys())
+fields_to_write = []
+
+if file_exists:
+    with open(output_file, "r", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        fields_to_write = [field for field in field_names if field not in reader.fieldnames]
+
+# 加上 "write_time" 欄位到 fields_to_write
+fields_to_write.append("write_time")
+
+# 使用 csv 模組寫入 CSV 檔案
+with open(output_file, "a", newline="", encoding="utf-8") as file:
+    writer = csv.DictWriter(file, fieldnames=field_names)
+
+    # 若 CSV 檔案不存在，寫入 CSV 標題列
+    if not file_exists:
+        writer.writeheader()
+
+    # 寫入 target 字典的資料作為一行資料
+    writer.writerow(target)
+
+print(f"已將 target 資料附加到 {output_file} 檔案中。")
 
 ## TODO: Notify
 
