@@ -75,6 +75,7 @@ if not os.path.exists("output"):
 
 options = webdriver.ChromeOptions()
 options.add_argument("incognito")
+options.add_argument("--headless")
 
 driver = webdriver.Chrome(options = options)
 driver.maximize_window()
