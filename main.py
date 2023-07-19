@@ -69,6 +69,10 @@ for obj in list_col[1:]:
         target["steps"].append(obj)
 
 ## Webdriver
+if not os.path.exists("output"):
+    os.makedirs("output")
+
+
 options = webdriver.ChromeOptions()
 options.add_argument("incognito")
 
