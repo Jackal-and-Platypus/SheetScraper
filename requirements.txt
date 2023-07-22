@@ -1,2 +1,3 @@
 pygsheets
 python-dotenv
+selenium
