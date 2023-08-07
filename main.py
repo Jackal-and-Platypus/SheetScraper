@@ -1,23 +1,13 @@
 import uuid
 import os
 from dotenv import load_dotenv
-import time
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.keys import Keys
 import pygsheets
+from scraper.test_suite import TestSuite
+from scraper.element import Element
+from scraper.account import Account
 
 load_dotenv()
-
-def save_screenshot(driver, path):
-    original_size = driver.get_window_size()
-    required_width = driver.execute_script('return document.body.parentNode.scrollWidth')
-    required_height = driver.execute_script('return document.body.parentNode.scrollHeight')
-    driver.set_window_size(required_width, required_height)
-    # driver.save_screenshot(path)  # has scrollbar
-    driver.find_element(By.TAG_NAME, 'body').screenshot(path)  # avoids scrollbar
-    driver.set_window_size(original_size['width'], original_size['height'])
 
 # Read from Google sheet
 gc = pygsheets.authorize(service_file = os.getenv("GOOGLE_SHEET_API_KEY_FILE"))
@@ -32,7 +22,7 @@ target = {"uuid":"", "host":"", "case":"", "auth":"", "snapshot":"", "steps":[],
 target["uuid"] = uuid.uuid1()
 
 # host
-wks = sht[0] 
+wks = sht[0]
 host = wks.cell("A2")
 target["host"] = host.value
 
@@ -53,7 +43,7 @@ rwd = wks.cell("E2")
 target["RWD"] = rwd.value
 
 # plan
-wks = sht[1] 
+wks = sht[1]
 index_column = 0
 list_row_data = wks.get_row(1)
 for obj in list_row_data:
@@ -71,31 +61,37 @@ for obj in list_col[1:]:
 ## Webdriver
 options = webdriver.ChromeOptions()
 options.add_argument("incognito")
+options.add_argument("headless")
 
 driver = webdriver.Chrome(options = options)
 driver.maximize_window()
 
-url_target = target["host"]
-if(bool(target["auth"])):
-  url_target = url_target + "/tplanet_signin.html"
-  driver.get(url_target)
-  driver.find_element(By.ID, value = "email").send_keys(os.getenv("TESTER_EMAIL"))
-  driver.find_element(By.ID, value = "password").send_keys(os.getenv("TESTER_PWD"))
-  driver.find_element(By.TAG_NAME, "form").submit()
-  time.sleep(5)
+# create TestSuite object
+test = TestSuite(driver,target["host"], target["case"], {
+    "auth": target["auth"],
+    "snapshot": target["snapshot"],
+    "RWD": target["RWD"]
+})
+
+if(bool(test.options["auth"])):
+    account = Account(test_suite=test,
+                      login_id=Element('id', 'email', os.getenv("TESTER_EMAIL")),
+                      password=Element('id', 'password', os.getenv("TESTER_PWD")))
+    account.go_submit_form_with_account("/tplanet_signin.html",
+                                        form_e=Element('tag_name', 'form'))
 
 ## Plan
 for step in target["steps"]:
-    driver.get(target["host"] + step)
-    time.sleep(5)
+    test.jump_to_page(step)
 
     # Snapshot
-    if (bool(target["snapshot"])):
-      # Scroll
-      driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    if (bool(test.options["snapshot"])):
+        # Scroll
+        test.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-      # 擷取完整網頁截圖
-      save_screenshot(driver, "output/" + str(target["uuid"]) + ".png")
+        # 擷取完整網頁截圖
+        os.makedirs("output/", exist_ok=True)
+        test.save_screenshot(f'output/{str(target["uuid"])}_{test.suite_name}_{step.replace("/","")}.png')
 
 ## TODO Report
 
