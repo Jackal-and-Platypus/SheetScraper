@@ -1,3 +1,0 @@
-selenium
-pygsheets
-python-dotenv
