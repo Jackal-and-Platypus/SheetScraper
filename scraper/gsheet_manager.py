@@ -1,23 +1,26 @@
 import os
 import pygsheets
-from dotenv import load_dotenv
+from pygsheets.exceptions import AuthenticationError
 from oauth2client.service_account import ServiceAccountCredentials
-import gspread
+from dotenv import load_dotenv
 
 load_dotenv()
 
 class SheetScraper:
-    def __init__(self, credentials_path, spreadsheet_key, sheet_name):
+    def __init__(self, credentials_path, spreadsheet_url, sheet_name):
         self.credentials_path = credentials_path
-        self.spreadsheet_key = spreadsheet_key
+        self.spreadsheet_url = spreadsheet_url
         self.sheet_name = sheet_name
+        self.client = self.authenticate()
+
+    def authenticate(self):
+        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(self.credentials_path, scope)
+        return pygsheets.authorize(service_file=self.credentials_path)
 
     def get_steps(self):
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(self.credentials_path, scope)
-        client = gspread.authorize(credentials)
-
-        sheet = client.open_by_key(self.spreadsheet_key).worksheet(self.sheet_name)
+        spreadsheet = self.client.open_by_url(self.spreadsheet_url)
+        sheet = spreadsheet.worksheet_by_title(self.sheet_name)
         data = sheet.get_all_records()
 
         all_steps = []
@@ -25,7 +28,7 @@ class SheetScraper:
 
         for row in data:
             step_number = row.get('step')
-            if isinstance(step_number, str) and step_number == "#":                
+            if step_number == "#":
                 if current_step is not None:
                     all_steps.append(current_step)
                 current_step = {
@@ -50,10 +53,10 @@ class SheetScraper:
 
 if __name__ == "__main__":
     credentials_path = os.getenv("GOOGLE_SHEET_API_KEY_FILE")
-    spreadsheet_key = os.getenv("TEST_PLAN")
+    spreadsheet_url = os.getenv("TEST_PLAN")
     sheet_name = "suite_members"
 
-    scraper = SheetScraper(credentials_path, spreadsheet_key, sheet_name)
+    scraper = SheetScraper(credentials_path, spreadsheet_url, sheet_name)
     steps = scraper.get_steps()
 
     print(steps)
