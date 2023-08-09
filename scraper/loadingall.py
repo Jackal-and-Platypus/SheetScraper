@@ -24,7 +24,7 @@ class SheetScraper:
                 if current_step is not None:
                     all_steps.append(current_step)
                 current_step = {
-                    "name": row.get('value'),
+                    "name": row.get('action_type'),
                     "steps": []
                 }
             else:
