@@ -1,7 +1,5 @@
 import os
 import pygsheets
-from pygsheets.exceptions import AuthenticationError
-from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,9 +12,7 @@ class SheetScraper:
         self.client = self.authenticate()
 
     def authenticate(self):
-        scope = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(self.credentials_path, scope)
-        return pygsheets.authorize(service_file=self.credentials_path)
+        return pygsheets.authorize(service_file = self.credentials_path)
 
     def get_steps(self):
         spreadsheet = self.client.open_by_url(self.spreadsheet_url)
