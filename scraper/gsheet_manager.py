@@ -46,13 +46,35 @@ class SheetScraper:
 
         return all_steps
 
+    def get_plan(self):
+        sheet = self.client.open_by_url(self.spreadsheet_url)
+        worksheet = sheet.worksheet_by_title(self.sheet_name)
+        records = worksheet.get_all_records()
+
+        test_plan = []
+        for record in records:
+            plan_entry = {
+                "host": record["host"],
+                "suite": record["suite"],
+                "auth": record["auth"],
+                "snapshot": record["snapshot"],
+                "restart": record["restart"]
+            }
+            test_plan.append(plan_entry)
+
+        return test_plan
+
 
 if __name__ == "__main__":
     credentials_path = os.getenv("GOOGLE_SHEET_API_KEY_FILE")
     spreadsheet_url = os.getenv("TEST_PLAN")
     sheet_name = "suite_members"
+    plan_sheet_name = "plan"
 
     scraper = SheetScraper(credentials_path, spreadsheet_url, sheet_name)
     steps = scraper.get_steps()
 
-    print(steps)
+
+    scraper = SheetScraper(credentials_path, spreadsheet_url, plan_sheet_name)
+    plan = scraper.get_plan()
+
