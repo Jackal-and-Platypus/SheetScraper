@@ -31,14 +31,13 @@ class SheetScraper:
                     "name": row.get('action_type'),
                     "steps": []
                 }
-            else:
-                step_info = {
-                    "action_type": row.get('action_type'),
-                    "by_method": row.get('by_method'),
-                    "by_value": row.get('by_value'),
-                    "value": row.get('value')
-                }
-                if current_step is not None:
+            elif current_step is not None and row.get('action_type') != "":
+                    step_info = {
+                        "action_type": row.get('action_type'),
+                        "by_method": row.get('by_method') or "None",
+                        "by_value": row.get('by_value') or "None",
+                        "value": row.get('value') or "None"
+                    }
                     current_step["steps"].append(step_info)
 
         if current_step is not None:
@@ -77,4 +76,5 @@ if __name__ == "__main__":
 
     scraper = SheetScraper(credentials_path, spreadsheet_url, plan_sheet_name)
     plan = scraper.get_plan()
+
 
