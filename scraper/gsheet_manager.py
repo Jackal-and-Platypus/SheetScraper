@@ -97,21 +97,13 @@ if __name__ == "__main__":
     sheet_name = "suite_members"
     scraper.set_sheet_name(sheet_name)
     steps = scraper.get_steps()
-    print("test_steps =")
-    print(steps)
-
 
     plan_sheet_name = "plan"
     scraper.set_sheet_name(plan_sheet_name)
     plan = scraper.get_plan()
-    print("test_plan =")
-    print(plan)
 
-    name_to_search = "刪除帳號"
+    name_to_search = "註冊"
     sheet_name = "suite_members"
     scraper.set_sheet_name(sheet_name)
     search_result = scraper.search_by_name(name_to_search)
-    if search_result is None:
-        print("No matching content found")
-    else:
-        print(search_result)
+
