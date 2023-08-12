@@ -9,8 +9,6 @@ class GsheetManager:
         self.credentials_path = credentials_path
         self.spreadsheet_url = spreadsheet_url
         self.client = self.authenticate()
-        self.sheet = None
-        self.records = None
 
     def authenticate(self):
         return pygsheets.authorize(service_file = self.credentials_path)
@@ -73,14 +71,24 @@ class GsheetManager:
 
         return test_plan
 
-    def search_by_name(self, name):
+    def search_by_step_name(self, name):
         steps = self.get_steps()
 
-        result = None
+        case = None
         for step in steps:
             if step["name"] == name:
-                result = step
+                case = step
                 break
+
+        return case
+
+    def search_by_plan_host(self, host):
+        steps = self.get_plan()
+
+        result = []
+        for step in steps:
+            if step["host"] == host:
+                result.append(step)
 
         return result
 
@@ -94,14 +102,15 @@ if __name__ == "__main__":
     scraper.set_sheet_name(sheet_name)
     steps = scraper.get_steps()
 
-
     plan_sheet_name = "plan"
     scraper.set_sheet_name(plan_sheet_name)
     plan = scraper.get_plan()
 
-
     name_to_search = "註冊"
     scraper.set_sheet_name(sheet_name)
-    search_result = scraper.search_by_name(name_to_search)
+    search_case = scraper.search_by_step_name(name_to_search)
 
+    host_to_search = "https://tplanet.townway.com.tw/"
+    scraper.set_sheet_name(plan_sheet_name)
+    search_result = scraper.search_by_plan_host(host_to_search)
 
