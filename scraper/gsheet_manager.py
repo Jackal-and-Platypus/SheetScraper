@@ -9,6 +9,8 @@ class GsheetManager:
         self.credentials_path = credentials_path
         self.spreadsheet_url = spreadsheet_url
         self.client = self.authenticate()
+        self.sheet = None
+        self.records = None
 
     def authenticate(self):
         return pygsheets.authorize(service_file = self.credentials_path)
@@ -82,12 +84,6 @@ class GsheetManager:
 
         return result
 
-def search_steps_by_name(credentials_path, spreadsheet_url, sheet_name, name):
-    scraper = GsheetManager(credentials_path, spreadsheet_url)
-    scraper.set_sheet_name(sheet_name)
-    result = scraper.search_by_name(name)
-    return result
-
 
 if __name__ == "__main__":
     credentials_path = os.getenv("GOOGLE_SHEET_API_KEY_FILE")
@@ -98,12 +94,14 @@ if __name__ == "__main__":
     scraper.set_sheet_name(sheet_name)
     steps = scraper.get_steps()
 
+
     plan_sheet_name = "plan"
     scraper.set_sheet_name(plan_sheet_name)
     plan = scraper.get_plan()
 
+
     name_to_search = "註冊"
-    sheet_name = "suite_members"
     scraper.set_sheet_name(sheet_name)
     search_result = scraper.search_by_name(name_to_search)
+
 
