@@ -1,4 +1,3 @@
-import os
 import pygsheets
 from dotenv import load_dotenv
 
@@ -115,45 +114,3 @@ class GsheetManager:
             row += 1
 
         return row + 1
-
-
-if __name__ == "__main__":
-    credentials_path = os.getenv("GOOGLE_SHEET_API_KEY_FILE")
-    spreadsheet_url = os.getenv("TEST_PLAN")
-    scraper = GsheetManager(credentials_path, spreadsheet_url)
-
-    sheet_name = "suite_members"
-    scraper.set_sheet_name(sheet_name)
-    steps = scraper.get_steps()
-
-    plan_sheet_name = "plan"
-    scraper.set_sheet_name(plan_sheet_name)
-    plan = scraper.get_plan()
-
-    name_to_search = "註冊"
-    scraper.set_sheet_name(sheet_name)
-    search_case = scraper.search_by_step_name(name_to_search)
-
-    host_to_search = "https://tplanet.townway.com.tw/"
-    scraper.set_sheet_name(plan_sheet_name)
-    search_result = scraper.search_by_plan_host(host_to_search)
-
-    scraper.set_sheet_name('test_case')
-    record = scraper.get_records()
-    row = scraper.search_row_by_name('auth_screenshot')
-
-    report = [{'name': 'index_RWD', 'result': 'success',
-               'report': [{'step': 3, 'action': 'check_css', 'value': '{"display":"none"}', 'result': 'success'},
-                          {'step': 5, 'action': 'check_css', 'value': '{"display":"block"}', 'result': 'success'}]},
-              {'name': 'auth_screenshot', 'result': 'success', 'report': [
-                  {'step': 1, 'action': 'check_link', 'value': '/backend/cms_project_detail.html?uuid=48821098',
-                   'result': 'success'},
-                  {'step': 2, 'action': 'check_link', 'value': '/backend/admin_agent_dashboard.html',
-                   'result': 'success'}]}]
-    # sheet = scraper.open_worksheet()
-    # print(sheet.get_all_values())
-    # print(sheet.get_all_records())
-
-    scraper.update_case_result_to_col(report, 6)
-
-    pass
