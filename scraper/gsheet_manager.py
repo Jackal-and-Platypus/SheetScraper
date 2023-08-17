@@ -76,12 +76,18 @@ class GsheetManager:
 
         return test_plan
 
-    def update_case_result_to_col(self, case_reports, col):
+    def update_result_to_col(self, reports, search_col_name, col):
         sheet = self.open_worksheet()
-        for report in case_reports:
-            row = self.search_row_by_name(report["name"])
-            print(sheet.get_value((row, col)))
+        for report in reports:
+            search_col = self.search_col_by_index(search_col_name)
+            row = self.search_row_by_col_and_value(search_col, report["name"])
             sheet.update_value((row, col), report["result"])
+
+    def update_case_result_to_col(self, case_reports, col):
+        self.update_result_to_col(case_reports, 'action_type', col)
+
+    def update_suite_result_to_col(self, suite_reports, col):
+        self.update_result_to_col(suite_reports, 'suite', col)
 
     def search_by_step_name(self, name):
         steps = self.get_steps()
@@ -104,13 +110,19 @@ class GsheetManager:
 
         return result
 
-    def search_row_by_name(self, name):
-        values = self.get_values()
+    def search_row_by_col_and_value(self, col, value):
+        cell_values = self.get_values()
         row = 0
 
-        for value in values:
-            if value[0] == '#' and value[1] == name:
+        for cell_value in cell_values:
+            if cell_value[col - 1] == value:
                 break
             row += 1
 
         return row + 1
+
+    def search_col_by_index(self, index):
+        sheet = self.open_worksheet()
+        row = sheet.get_row(1)
+
+        return row.index(index)
