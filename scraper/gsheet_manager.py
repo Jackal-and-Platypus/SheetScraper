@@ -83,6 +83,16 @@ class GsheetManager:
             row = self.search_row_by_col_and_value(search_col, report["name"])
             sheet.update_value((row, col), report["result"])
 
+    def update_step_result_to_col(self, case_reports, col):
+        sheet = self.open_worksheet()
+        for step in case_reports['report']:
+            print('step: ', step)
+            if 'result' in step.keys() is False:
+                continue
+            search_col = self.search_col_by_index('action_type')
+            row = self.search_row_by_col_and_value(search_col, case_reports["name"]) + step['step']
+            sheet.update_value((row, col), step["result"])
+
     def update_case_result_to_col(self, case_reports, col):
         self.update_result_to_col(case_reports, 'action_type', col)
 
@@ -125,4 +135,4 @@ class GsheetManager:
         sheet = self.open_worksheet()
         row = sheet.get_row(1)
 
-        return row.index(index)
+        return row.index(index) + 1
