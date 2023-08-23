@@ -14,3 +14,7 @@ class Element:
         self.by_method = by_method
         self.by_value = by_value
         self.value = value
+
+    @classmethod
+    def from_dict(cls, input_dict):
+        return cls(input_dict['by_method'], input_dict['by_value'], input_dict['value'])

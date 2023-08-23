@@ -1,100 +1,74 @@
-import uuid
 import os
 from dotenv import load_dotenv
 from selenium import webdriver
-import pygsheets
 from scraper.test_suite import TestSuite
-from scraper.element import Element
-from scraper.account import Account
+from scraper.gsheet_manager import GsheetManager
 
 load_dotenv()
 
-# Read from Google sheet
-gc = pygsheets.authorize(service_file = os.getenv("GOOGLE_SHEET_API_KEY_FILE"))
 
-sht = gc.open_by_url(os.getenv("TEST_PLAN"))
-wks_list = sht.worksheets()
+def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
+    # auth
+    if suite.options['auth']:
+        # get auth by host
+        sheet_manager.set_sheet_name('auth')
+        sheet_manager.open_worksheet()
+        auth_steps = sheet_manager.search_by_step_name(suite.host)
+        suite.start_auth(auth_steps['steps'])
+        suite.jump_to_page(suite.host)
 
-target = {"uuid":"", "host":"", "case":"", "auth":"", "snapshot":"", "steps":[], "RWD":""}
+    # get data from suite tab
+    sheet_manager.set_sheet_name(suite.suite_name)
+    sheet_manager.open_worksheet()
+    cases = sheet_manager.get_steps()
+    for case in cases:
+        suite.start_case(case)
+        sheet_manager.update_step_result_to_col(suite.report[-1], 6)
 
-## 環境變數
-# UUID
-target["uuid"] = uuid.uuid1()
+    # Report
+    for i in range(len(suite.report)):
+        success_steps = [step['result'] for step in suite.report[i]['report']]
+        suite.report[i]['result'] = suite.get_result_from_list(success_steps)
 
-# host
-wks = sht[0]
-host = wks.cell("A2")
-target["host"] = host.value
+    sheet_manager.update_case_result_to_col(suite.report, 6)
 
-# case
-cases = wks.cell("B2")
-target["case"] = cases.value
 
-# auth
-auth = wks.cell("C2")
-target["auth"] = auth.value
+def main():
+    # init
+    os.makedirs("output/", exist_ok=True)
+    sheet_url = os.getenv('TEST_PLAN')
+    api_key_path = os.getenv('GOOGLE_SHEET_API_KEY_FILE')
 
-# snapshot
-snapshot = wks.cell("D2")
-target["snapshot"] = snapshot.value
+    # Read from Google sheet
+    sheet_manager = GsheetManager(api_key_path, sheet_url)
+    sheet_manager.set_sheet_name('plan')
+    sheet_manager.open_worksheet()
+    plans = sheet_manager.get_plan()
 
-# RWD
-rwd = wks.cell("E2")
-target["RWD"] = rwd.value
+    # Webdriver
+    options = webdriver.ChromeOptions()
+    options.add_argument("incognito")
+    options.add_argument("headless")
 
-# plan
-wks = sht[1]
-index_column = 0
-list_row_data = wks.get_row(1)
-for obj in list_row_data:
-    index_column += 1
-    if obj == target["case"]:
-        plan = obj
-        break
+    driver = webdriver.Chrome(options=options)
+    driver.maximize_window()
 
-list_col = wks.get_col(index_column)
+    for i in range(len(plans)):
+        suite = TestSuite(driver, plans[i]["host"], plans[i]["suite"], {
+            "auth": bool(plans[i]["auth"] == 'TRUE'),
+            "snapshot": bool(plans[i]["snapshot"] == 'TRUE')
+        })
 
-for obj in list_col[1:]:
-    if (obj != ""):
-        target["steps"].append(obj)
+        start_suite_test(suite, sheet_manager)
+        suite_sheet = sheet_manager.open_worksheet()
+        results = suite_sheet.get_col(6)
+        plans[i]['name'] = plans[i]['suite']
+        plans[i]['result'] = suite.get_result_from_list(results)
+        sheet_manager.set_sheet_name('plan')
+        sheet_manager.update_suite_result_to_col([plans[i]], 1)
 
-## Webdriver
-options = webdriver.ChromeOptions()
-options.add_argument("incognito")
-options.add_argument("headless")
+    driver.quit()
 
-driver = webdriver.Chrome(options = options)
-driver.maximize_window()
 
-# create TestSuite object
-test = TestSuite(driver,target["host"], target["case"], {
-    "auth": target["auth"],
-    "snapshot": target["snapshot"],
-    "RWD": target["RWD"]
-})
-
-if(bool(test.options["auth"])):
-    account = Account(test_suite=test,
-                      login_id=Element('id', 'email', os.getenv("TESTER_EMAIL")),
-                      password=Element('id', 'password', os.getenv("TESTER_PWD")))
-    account.go_submit_form_with_account("/tplanet_signin.html",
-                                        form_e=Element('tag_name', 'form'))
-
-## Plan
-for step in target["steps"]:
-    test.jump_to_page(step)
-
-    # Snapshot
-    if (bool(test.options["snapshot"])):
-        # Scroll
-        test.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
-        # 擷取完整網頁截圖
-        os.makedirs("output/", exist_ok=True)
-        test.save_screenshot(f'output/{str(target["uuid"])}_{test.suite_name}_{step.replace("/","")}.png')
-
-## TODO Report
-
-## TODO: Notify
-
-driver.quit()
+if __name__ == "__main__":
+    main()
