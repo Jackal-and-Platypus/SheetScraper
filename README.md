@@ -56,6 +56,7 @@
 - 勾選 snapshot 就會在每個步驟截圖儲存
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
 ### 建置環境 Built With
 
 - Python (v3.9.13 / v3.11.4)
@@ -132,7 +133,7 @@ Linux/mac: `source activate SheetScraper`
 <!-- USAGE -->
 ## 使用方法 Usage
 ### 編寫 Test Plan
-![plan](https://github.com/Jackal-and-Platypus/SheetScraper/blob/main/public/images/plan.png)
+![plan](https://raw.githubusercontent.com/Jackal-and-Platypus/SheetScraper/main/images/plan.png)
 分頁名稱必須為 `plan`
 - `result`: 測試完成後會顯示 succes 或 failure
 - `host`: 想要測試的網域，在跨多網域的情況下可以留空
@@ -143,8 +144,8 @@ Linux/mac: `source activate SheetScraper`
 ### Test Suite 分頁
 分頁的名稱請依照 plan 分頁的 `suite`填寫
 #### 步驟設定
-![member](https://github.com/Jackal-and-Platypus/SheetScraper/blob/main/public/images/members.png)
-![css](https://github.com/Jackal-and-Platypus/SheetScraper/blob/main/public/images/css_step.png)
+![member](https://raw.githubusercontent.com/Jackal-and-Platypus/SheetScraper/main/images/members.png)
+![css](https://raw.githubusercontent.com/Jackal-and-Platypus/SheetScraper/main/images/css_step.png)
 - `#`: 定位每一個項目的首行，切勿刪除
 - `#` 的右邊那格: Test Case 的名稱，不可重複
 - `step`: 步驟順序
@@ -174,7 +175,8 @@ Linux/mac: `source activate SheetScraper`
 	  - except failure: 通常發生在找不到指定元素的情況
 
 ### 驗證設定
-![auth](https://github.com/Jackal-and-Platypus/SheetScraper/blob/main/public/images/auth.png)
+![auth](https://raw.githubusercontent.com/Jackal-and-Platypus/SheetScraper/main/images/auth.png)
+
 分頁名稱必須為 `auth`
 - host url 的格子：plan 的頁面勾選 auth 後，會用該 Test Suite 的 host 搜尋 auth 的步驟
 其他欄位與 Test Suite 分頁的步驟設定一致
