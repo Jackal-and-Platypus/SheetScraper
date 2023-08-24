@@ -188,6 +188,7 @@ python main.py
 ```
 
 <p align="right">(<a href="#top">back to top</a>)</p>
+
 <!-- LICENSE -->
 ## 版權聲明 License
 使用 [MIT](https://github.com/Prysline/S2A1_restaurant/blob/main/LICENSE) License。
