@@ -15,6 +15,8 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
         sheet_manager.open_worksheet()
         auth_steps = sheet_manager.search_by_step_name(suite.host)
         suite.start_auth(auth_steps['steps'])
+
+    if suite.host != '':
         suite.jump_to_page(suite.host)
 
     # get data from suite tab

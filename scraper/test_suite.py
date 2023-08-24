@@ -40,7 +40,6 @@ class TestSuite:
     def start_case(self, case: dict):
         case_report = {"name": case["name"], "report": []}
         i = 1
-        self.jump_to_page(self.host)
         for step in case['steps']:
             if step['action_type'][:6] == 'check_':
                 result = self.check_test(step)
@@ -64,7 +63,6 @@ class TestSuite:
     def start_step(self, step: dict):
         if 'by_method' in step and step['by_method'] is not None:
             element = Element.from_dict(step)
-        print(step)
         try:
             if step['action_type'] == 'page':
                 self.jump_to_page(step['value'])
@@ -89,7 +87,7 @@ class TestSuite:
                 else:
                     return 'success'
             elif step['action_type'] == 'check_link':
-                if element.by_method is 'None':
+                if element.by_method == 'None':
                     return self.check_link(element)
                 else:
                     self.click_element(element)
@@ -113,6 +111,10 @@ class TestSuite:
 
     def check_link(self, element: Element):
         target_url = urljoin(self.host, element.value)
+
+        if element.by_method != 'None':
+            if self.driver.current_url != target_url:
+                return 'failure'
 
         if requests.get(target_url).status_code == 200:
             return 'success'

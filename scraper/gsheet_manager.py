@@ -86,7 +86,6 @@ class GsheetManager:
     def update_step_result_to_col(self, case_reports, col):
         sheet = self.open_worksheet()
         for step in case_reports['report']:
-            print('step: ', step)
             if 'result' in step.keys() is False:
                 continue
             search_col = self.search_col_by_index('action_type')
