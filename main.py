@@ -23,14 +23,14 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
     cases = sheet_manager.get_steps()
     for case in cases:
         suite.start_case(case)
-        sheet_manager.update_step_result_to_col(suite.report[-1], 6)
+        for step_report in suite.report[-1]['report']:
+            sheet_manager.update_result(step_report, 6)
 
     # Report
     for i in range(len(suite.report)):
-        success_steps = [step['result'] for step in suite.report[i]['report']]
-        suite.report[i]['result'] = suite.get_result_from_list(success_steps)
-
-    sheet_manager.update_case_result_to_col(suite.report, 6)
+        step_results = [step['result'] for step in suite.report[i]['report']]
+        suite.report[i]['result'] = suite.get_result_from_list(step_results)
+        sheet_manager.update_result(suite.report[i], 6)
 
 
 def main():
@@ -62,9 +62,10 @@ def main():
         sheet_manager.open_worksheet(suite.suite_name)
         results = sheet_manager.sheet.get_col(6)
         plans[i]['name'] = plans[i]['suite']
+        plans[i]['row'] = i + 2
         plans[i]['result'] = suite.get_result_from_list(results)
         sheet_manager.open_worksheet('plan')
-        sheet_manager.update_suite_result_to_col([plans[i]], 1)
+        sheet_manager.update_result(plans[i], 1)
 
     driver.quit()
 

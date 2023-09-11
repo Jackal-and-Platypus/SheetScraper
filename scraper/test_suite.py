@@ -38,13 +38,13 @@ class TestSuite:
         self.report = []
 
     def start_case(self, case: dict):
-        case_report = {"name": case["name"], "report": []}
+        case_report = {"name": case["name"], "row": case["row"], "report": []}
         i = 1
         for step in case['steps']:
             if step['action_type'][:6] == 'check_':
                 result = self.check_test(step)
                 case_report['report'].append(
-                    {'step': i, 'action': step['action_type'], 'value': step['value'], 'result': result})
+                    {'step': i, 'row': step['row'], 'action': step['action_type'], 'value': step['value'], 'result': result})
 
             else:
                 self.start_step(step)
@@ -77,7 +77,7 @@ class TestSuite:
         except Exception as e:
             print(e)
 
-    def check_test(self, step):
+    def check_test(self, step: dict) -> str:
         element = Element.from_dict(step)
 
         try:
@@ -96,7 +96,7 @@ class TestSuite:
             print(e)
             return 'except failure'
 
-    def check_css(self, element: Element):
+    def check_css(self, element: Element) -> str:
         value = json.loads(element.value)
         result = []
 
@@ -109,7 +109,7 @@ class TestSuite:
 
         return result
 
-    def check_link(self, element: Element):
+    def check_link(self, element: Element) -> str:
         target_url = urljoin(self.host, element.value)
 
         if element.by_method != 'None':
@@ -121,7 +121,7 @@ class TestSuite:
         else:
             return 'failure'
 
-    def get_result_from_list(self, result_list):
+    def get_result_from_list(self, result_list: list) -> str:
         if 'failure' in result_list or 'except failure' in result_list:
             return 'failure'
         return 'success'
@@ -148,7 +148,7 @@ class TestSuite:
         original_size = self.driver.get_window_size()
         self.driver.set_window_size(width, original_size['height'])
 
-    def save_screenshot(self, path):
+    def save_screenshot(self, path: str):
         original_size = self.driver.get_window_size()
         required_width = self.driver.execute_script('return document.body.parentNode.scrollWidth')
         required_height = self.driver.execute_script('return document.body.parentNode.scrollHeight')

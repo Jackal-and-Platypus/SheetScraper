@@ -29,26 +29,37 @@ class GsheetManager:
         return values
 
     def get_steps(self):
-        records = self.get_records()
+        records = self.get_values()
+        index_col_map = {}
+
+        for i in range(len(records[0])):
+            index_col_map[records[0][i]] = i
 
         all_steps = []
         current_step = None
 
-        for row in records:
-            step_number = row.get('step')
+        for row_index in range(1, len(records)):
+            row = records[row_index]
+            step_number = row[index_col_map['step']]
+            if step_number == "":
+                continue
+
             if step_number == "#":
                 if current_step is not None:
                     all_steps.append(current_step)
                 current_step = {
-                    "name": row.get('action_type'),
+                    "name": row[index_col_map['action_type']],
+                    "row": row_index + 1,
                     "steps": []
                 }
-            elif current_step is not None and row.get('action_type') != "":
+            elif current_step is not None and row[index_col_map['action_type']] != "":
                 step_info = {
-                    "action_type": row.get('action_type'),
-                    "by_method": row.get('by_method') or "None",
-                    "by_value": row.get('by_value') or "None",
-                    "value": row.get('value') or "None"
+                    "step_value": row[index_col_map['step']],
+                    "row": row_index + 1,
+                    "action_type": row[index_col_map['action_type']],
+                    "by_method": row[index_col_map['by_method']] or "None",
+                    "by_value": row[index_col_map['by_value']] or "None",
+                    "value": row[index_col_map['value']] or "None"
                 }
                 current_step["steps"].append(step_info)
 
@@ -72,27 +83,11 @@ class GsheetManager:
 
         return test_plan
 
-    def update_result_to_col(self, reports, search_col_name, col):
-        for report in reports:
-            search_col = self.search_col_by_index(search_col_name)
-            row = self.search_row_by_col_and_value(search_col, report["name"])
-            self.sheet.update_value((row, col), report["result"])
+    def update_result(self, report: dict, col: int):
+        row = report["row"]
+        self.sheet.update_value((row, col), report["result"])
 
-    def update_step_result_to_col(self, case_reports, col):
-        for step in case_reports['report']:
-            if 'result' in step.keys() is False:
-                continue
-            search_col = self.search_col_by_index('action_type')
-            row = self.search_row_by_col_and_value(search_col, case_reports["name"]) + step['step']
-            self.sheet.update_value((row, col), step["result"])
-
-    def update_case_result_to_col(self, case_reports, col):
-        self.update_result_to_col(case_reports, 'action_type', col)
-
-    def update_suite_result_to_col(self, suite_reports, col):
-        self.update_result_to_col(suite_reports, 'suite', col)
-
-    def search_by_step_name(self, name):
+    def search_by_step_name(self, name: str):
         steps = self.get_steps()
 
         case = None
@@ -103,7 +98,7 @@ class GsheetManager:
 
         return case
 
-    def search_by_plan_host(self, host):
+    def search_by_plan_host(self, host: str):
         steps = self.get_plan()
 
         result = []
@@ -112,19 +107,3 @@ class GsheetManager:
                 result.append(step)
 
         return result
-
-    def search_row_by_col_and_value(self, col, value):
-        cell_values = self.get_values()
-        row = 0
-
-        for cell_value in cell_values:
-            if cell_value[col - 1] == value:
-                break
-            row += 1
-
-        return row + 1
-
-    def search_col_by_index(self, index):
-        row = self.sheet.get_row(1)
-
-        return row.index(index) + 1
