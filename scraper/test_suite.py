@@ -41,10 +41,17 @@ class TestSuite:
         case_report = {"name": case["name"], "row": case["row"], "report": []}
         i = 1
         for step in case['steps']:
+            step_print = str(i) + ": " + step['action_type']
+            if step['by_method'] != 'None':
+                step_print += f"({step['by_method']}|{step['by_value']}) "
+            step_print += f" -> {step['value']}"
+            print(step_print)
+
             if step['action_type'][:6] == 'check_':
                 result = self.check_test(step)
                 case_report['report'].append(
                     {'step': i, 'row': step['row'], 'action': step['action_type'], 'value': step['value'], 'result': result})
+                print("    => " + result)
 
             else:
                 self.start_step(step)

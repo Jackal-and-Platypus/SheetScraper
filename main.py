@@ -21,7 +21,9 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
     # get data from suite tab
     sheet_manager.open_worksheet(suite.suite_name)
     cases = sheet_manager.get_steps()
+    # Test Case
     for case in cases:
+        print('# ' + case['name'])
         suite.start_case(case)
         for step_report in suite.report[-1]['report']:
             sheet_manager.update_result(step_report, 6)
@@ -35,16 +37,19 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
 
 def main():
     # init
+    print("<< Starting SheetScraper >>")
     os.makedirs("output/", exist_ok=True)
     sheet_url = os.getenv('TEST_PLAN')
     api_key_path = os.getenv('GOOGLE_SHEET_API_KEY_FILE')
 
     # Read from Google sheet
+    print("Reading Google sheet...")
     sheet_manager = GsheetManager(api_key_path, sheet_url)
     sheet_manager.open_worksheet('plan')
     plans = sheet_manager.get_plan()
 
     # Webdriver
+    print("Creating Webdriver...")
     options = webdriver.ChromeOptions()
     options.add_argument("incognito")
     options.add_argument("headless")
@@ -52,11 +57,14 @@ def main():
     driver = webdriver.Chrome(options=options)
     driver.maximize_window()
 
+    # Test Suite
     for i in range(len(plans)):
         suite = TestSuite(driver, plans[i]["host"], plans[i]["suite"], {
             "auth": bool(plans[i]["auth"] == 'TRUE'),
             "snapshot": bool(plans[i]["snapshot"] == 'TRUE')
         })
+        print("========================================")
+        print("[ Test Suite: " + suite.suite_name + " ]")
 
         start_suite_test(suite, sheet_manager)
         sheet_manager.open_worksheet(suite.suite_name)
@@ -67,6 +75,8 @@ def main():
         sheet_manager.open_worksheet('plan')
         sheet_manager.update_result(plans[i], 1)
 
+    print("========================================")
+    print("FINISHED!")
     driver.quit()
 
 
