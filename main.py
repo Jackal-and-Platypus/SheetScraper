@@ -11,8 +11,7 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
     # auth
     if suite.options['auth']:
         # get auth by host
-        sheet_manager.set_sheet_name('auth')
-        sheet_manager.open_worksheet()
+        sheet_manager.open_worksheet('auth')
         auth_steps = sheet_manager.search_by_step_name(suite.host)
         suite.start_auth(auth_steps['steps'])
 
@@ -20,8 +19,7 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
         suite.jump_to_page(suite.host)
 
     # get data from suite tab
-    sheet_manager.set_sheet_name(suite.suite_name)
-    sheet_manager.open_worksheet()
+    sheet_manager.open_worksheet(suite.suite_name)
     cases = sheet_manager.get_steps()
     for case in cases:
         suite.start_case(case)
@@ -43,8 +41,7 @@ def main():
 
     # Read from Google sheet
     sheet_manager = GsheetManager(api_key_path, sheet_url)
-    sheet_manager.set_sheet_name('plan')
-    sheet_manager.open_worksheet()
+    sheet_manager.open_worksheet('plan')
     plans = sheet_manager.get_plan()
 
     # Webdriver
@@ -62,11 +59,11 @@ def main():
         })
 
         start_suite_test(suite, sheet_manager)
-        suite_sheet = sheet_manager.open_worksheet()
-        results = suite_sheet.get_col(6)
+        sheet_manager.open_worksheet(suite.suite_name)
+        results = sheet_manager.sheet.get_col(6)
         plans[i]['name'] = plans[i]['suite']
         plans[i]['result'] = suite.get_result_from_list(results)
-        sheet_manager.set_sheet_name('plan')
+        sheet_manager.open_worksheet('plan')
         sheet_manager.update_suite_result_to_col([plans[i]], 1)
 
     driver.quit()

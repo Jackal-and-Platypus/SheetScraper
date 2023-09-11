@@ -1,35 +1,31 @@
 import pygsheets
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class GsheetManager:
-    def __init__(self, credentials_path, spreadsheet_url):
+    def __init__(self, credentials_path: str, spreadsheet_url: str):
         self.sheet_name = ""
         self.credentials_path = credentials_path
         self.spreadsheet_url = spreadsheet_url
         self.client = self.authenticate()
+        self.sheet = None
 
     def authenticate(self):
         return pygsheets.authorize(service_file=self.credentials_path)
 
-    def open_worksheet(self):
+    def open_worksheet(self, sheet_name: str):
+        self.set_sheet_name(sheet_name)
         spreadsheet = self.client.open_by_url(self.spreadsheet_url)
-        sheet = spreadsheet.worksheet_by_title(self.sheet_name)
-        return sheet
+        self.sheet = spreadsheet.worksheet_by_title(sheet_name)
 
-    def set_sheet_name(self, sheet_name):
+    def set_sheet_name(self, sheet_name: str):
         self.sheet_name = sheet_name
 
     def get_records(self):
-        sheet = self.open_worksheet()
-        records = sheet.get_all_records()
+        records = self.sheet.get_all_records()
         return records
 
     def get_values(self):
-        sheet = self.open_worksheet()
-        values = sheet.get_all_values()
+        values = self.sheet.get_all_values()
         return values
 
     def get_steps(self):
@@ -77,20 +73,18 @@ class GsheetManager:
         return test_plan
 
     def update_result_to_col(self, reports, search_col_name, col):
-        sheet = self.open_worksheet()
         for report in reports:
             search_col = self.search_col_by_index(search_col_name)
             row = self.search_row_by_col_and_value(search_col, report["name"])
-            sheet.update_value((row, col), report["result"])
+            self.sheet.update_value((row, col), report["result"])
 
     def update_step_result_to_col(self, case_reports, col):
-        sheet = self.open_worksheet()
         for step in case_reports['report']:
             if 'result' in step.keys() is False:
                 continue
             search_col = self.search_col_by_index('action_type')
             row = self.search_row_by_col_and_value(search_col, case_reports["name"]) + step['step']
-            sheet.update_value((row, col), step["result"])
+            self.sheet.update_value((row, col), step["result"])
 
     def update_case_result_to_col(self, case_reports, col):
         self.update_result_to_col(case_reports, 'action_type', col)
@@ -131,7 +125,6 @@ class GsheetManager:
         return row + 1
 
     def search_col_by_index(self, index):
-        sheet = self.open_worksheet()
-        row = sheet.get_row(1)
+        row = self.sheet.get_row(1)
 
         return row.index(index) + 1
