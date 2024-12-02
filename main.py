@@ -1,6 +1,9 @@
 import os
+from time import perf_counter
 from dotenv import load_dotenv
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 from scraper.test_suite import TestSuite
 from scraper.gsheet_manager import GsheetManager
 
@@ -13,6 +16,10 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
         # get auth by host
         sheet_manager.open_worksheet('auth')
         auth_steps = sheet_manager.search_by_step_name(suite.host)
+        start_time=perf_counter()
+        suite.jump_to_page(suite.host)
+        end_time=perf_counter()
+        print(f"duration: {end_time - start_time} seconds")
         suite.start_auth(auth_steps['steps'])
 
     if suite.host != '':
@@ -23,7 +30,7 @@ def start_suite_test(suite: TestSuite, sheet_manager: GsheetManager):
     cases = sheet_manager.get_steps()
     # Test Case
     for case in cases:
-        print('# ' + case['name'])
+        print('\n# ' + case['name'])
         suite.start_case(case)
         for step_report in suite.report[-1]['report']:
             sheet_manager.update_result(step_report, 6)
@@ -47,14 +54,17 @@ def main():
     sheet_manager = GsheetManager(api_key_path, sheet_url)
     sheet_manager.open_worksheet('plan')
     plans = sheet_manager.get_plan()
+    print(plans)
 
     # Webdriver
     print("Creating Webdriver...")
     options = webdriver.ChromeOptions()
     options.add_argument("incognito")
-    options.add_argument("headless")
+    # options.add_argument("headless")
 
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(
+        service=ChromeService(ChromeDriverManager().install()), options=options
+    )
     driver.maximize_window()
 
     # Test Suite

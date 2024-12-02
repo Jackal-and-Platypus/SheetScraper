@@ -73,6 +73,8 @@ class GsheetManager:
 
         test_plan = []
         for record in records:
+            if (record["host"] == "" or record["suite"] == ""):
+                break
             plan_entry = {
                 "host": record["host"],
                 "suite": record["suite"],
