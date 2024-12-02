@@ -5,6 +5,7 @@ output/
 .conda/
 .idea/
 .scripts/
+.vscode/
 chromedriver*/
 chromedriver*
 LICENSE
