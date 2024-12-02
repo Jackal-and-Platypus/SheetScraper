@@ -2,6 +2,12 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,pycharm,dotenv
 
 output/
+.conda/
+.idea/
+.scripts/
+chromedriver*/
+chromedriver*
+LICENSE
 
 ### dotenv ###
 .env
